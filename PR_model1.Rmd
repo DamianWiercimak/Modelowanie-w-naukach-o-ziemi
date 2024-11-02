@@ -1,0 +1,54 @@
+---
+title: "Model1"
+author: "Jakub Niedźwiedź"
+date: "2024-05-29"
+output:
+  word_document: default
+  html_document: default
+---
+
+```{r}
+library(ggplot2)
+library(dplyr)
+library(lubridate)
+library(lmtest)
+library(stringr)
+
+# Przygotowanie danych
+
+# Utworzenie zmiennej 'datamod'
+wynik_modelu <- data.frame(Date = daily_ice_edge$Date)
+wynik_modelu <- wynik_modelu %>% slice(1590:n())
+
+for (x in 2:361){
+datamod <- data.frame(
+  ice_extent = daily_ice_edge[,x], # Zakładając, że 'longitude_0E' zawiera zasięg lodu
+  Date = daily_ice_edge$Date
+)
+
+# Pominięcie pierwszych 1588 wierszy
+datamod <- datamod %>% slice(1590:n())
+
+datamod$time <- 1:nrow(datamod)
+
+# Model sinusoidalny zasięgu lodu w funkcji czasu
+model <- lm(ice_extent ~ sin(2*pi*time/365) + cos(2*pi*time/365), data = datamod)
+
+# Ocena modelu
+
+# Wyznaczenie przewidywanych wartości na podstawie modelu
+predicted_values  <- predict(model, newdata = datamod)
+
+wynik_modelu <- cbind(wynik_modelu, predicted_values )
+
+# Wykres porównujący rzeczywiste i przewidywane wartości zasięgu lodu
+# ggplot(datamod, aes(x = time)) +
+#   geom_line(aes(y = ice_extent, color = "Actual"), size = 1) +
+#   geom_line(aes(y = predicted_values, color = "Predicted"), linetype = "dashed", size = 1) +
+#   labs(title = "Porównanie rzeczywistych i przewidywanych wartości zasięgu lodu", x = "Czas", y = "Zasięg lodu") +
+#   scale_color_manual(values = c("Actual" = "blue", "Predicted" = "red")) +
+#   theme_minimal()
+}
+
+```
+

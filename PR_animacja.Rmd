@@ -1,0 +1,67 @@
+---
+title: "PR_animacja"
+author: "Jakub Niedźwiedź"
+date: "2024-05-29"
+output:
+  word_document: default
+  html_document: default
+---
+```{r}
+library(ggplot2)
+library(dplyr)
+library(lubridate)
+library(gganimate)
+# data <- read.csv("daily_ice_edge.csv")
+# head(data)
+# min_ice_edge <- apply(data, 2, min, na.rm = TRUE)
+
+
+angles <- as.numeric(gsub("longitude_|E", "", names(min_ice_edge)))
+
+wynik_modelu1 <- wynik_modelu[2:361]
+
+daily_ice_edge_ani <- daily_ice_edge[2:361]
+daily_ice_edge_ani <- daily_ice_edge_ani %>% slice(1590:n())
+
+# Create an empty data frame to hold all frames
+all_frames <- data.frame()
+repetitions_per_frame <- 5
+
+for (n in 100:200) {
+  predict <- as.numeric(wynik_modelu1[n, ])
+  predict <- 90 + predict
+  
+  actuals <- as.numeric(daily_ice_edge_ani[n,])
+  actuals <- 90 + actuals
+  
+  plot_data <- data.frame(
+    angle = angles,
+    distance = actuals,
+    predicted = predict,
+    frame = rep(n, repetitions_per_frame)
+  )
+  
+  all_frames <- rbind(all_frames, plot_data)
+}
+
+# Plot using gganimate
+p <- ggplot(all_frames, aes(x = angle)) +
+  ylim(0, 50) +
+  geom_line(aes(y = distance, color = "Actual"), size = 1.3) +
+  geom_line(aes(y = predicted, color = "Predicted"), size = 1.3) +
+  coord_polar(start = 0) +
+  theme_minimal() +
+  labs(title = "Minimalny zasięg lodu morskiego wokół Antarktydy",
+       x = "Długość geograficzna (°)",
+       y = "Zasięg lodu (°)",
+       color = "Legend") +
+  scale_color_manual(values = c("Actual" = "red", "Predicted" = "blue")) +
+  transition_manual(frame)
+
+# Save the animation
+anim_save("daily_ice_edge_animation3.gif", p, fps = 20, nframes = 10)
+
+```
+
+
+

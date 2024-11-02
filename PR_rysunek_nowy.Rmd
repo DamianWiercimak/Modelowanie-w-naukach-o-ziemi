@@ -1,0 +1,58 @@
+---
+title: "Untitled"
+author: "Jakub Niedźwiedź"
+date: "2024-06-18"
+output:
+  word_document: default
+  html_document: default
+---
+
+```{r}
+library(ggplot2)
+library(dplyr)
+library(lubridate)
+library(maps)
+library(mapdata)
+
+# Import danych z pliku CSV
+data <- daily_ice_edge
+
+# Kolumnę 'Date' nie jest potrzebna do rysowania konturu
+data <- select(data, -Date)
+#data <- select(data, -longitude_360E)
+
+# Znalezienie minimalnycj wartości zasięgu lodu dla każdej długości geograficznej
+min_ice_edge1 <- apply(data, 2, min, na.rm = TRUE)
+min_ice_edge = 90 + min_ice_edge1
+
+# Przygotowanie danych do wykresu
+angles <- as.numeric(gsub("longitude_|E", "", names(min_ice_edge)))
+distances <- min_ice_edge
+
+angles <- ifelse(angles > 180, angles - 360, angles)
+
+# Tworzenie dataframe do wykresu
+plot_data <- data.frame(
+  angle = angles,
+  distance = distances
+)
+
+# Dodanie pierwszego punktu na koniec, aby wykres był zamknięty
+plot_data <- rbind(plot_data, plot_data[1,])
+
+antarctica_map <- map_data("world", region = "Antarctica")
+#antarctica_map$long <- ifelse(antarctica_map$long < 0, 361+antarctica_map$long, antarctica_map$long)
+
+
+# Wykres minimalnego zasięgu lodu
+ggplot(plot_data, aes(x = angle +180, y = distance)) +
+  ylim(0, 30) +
+  geom_polygon(data = antarctica_map, aes(x = long +180, y = 90 + lat, group = group), fill = "lightblue") +
+  geom_line(color = "blue", size = 1.3) +
+  coord_polar(start = 0) + # Ustawienie początku osi na godzinę 12
+  theme_minimal() +
+  labs(title = "Minimalny zasięg lodu morskiego wokół Antarktydy",
+       x = "Długość geograficzna (°)",
+       y = "Zasięg lodu (°)")
+
+```
