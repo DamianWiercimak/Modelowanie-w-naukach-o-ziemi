@@ -1,11 +1,3 @@
----
-title: "Model1"
-author: "Jakub Niedźwiedź"
-date: "2024-05-29"
-output:
-  word_document: default
-  html_document: default
----
 
 ```{r}
 library(ggplot2)
